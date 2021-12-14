@@ -15,4 +15,7 @@ public interface RecipeService {
     ApiResponse getById(Long id);
 
     ApiResponse addIngredientToRecipe(Long recipeId, List<Long> ingredientIdList);
+
+    ApiResponse getName(String name);
+
 }

@@ -6,7 +6,9 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
+import java.sql.Date;
 import java.util.Collection;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -30,9 +32,18 @@ public class User implements UserDetails {
 
     String password;
 
+    String birthDate;
+
+    @Column(name = "users_role")
+    @ElementCollection(targetClass = Role.class, fetch = FetchType.EAGER)
+    @CollectionTable(name = "users_role", joinColumns = @JoinColumn(name = "users_id"))
+    @Enumerated(EnumType.STRING)
+    private Set<Role> roles;
+
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
+        return roles;
     }
 
     @Override

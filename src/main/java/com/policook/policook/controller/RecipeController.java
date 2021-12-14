@@ -7,6 +7,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,24 +23,30 @@ public class RecipeController {
     @Autowired
     RecipeService recipeService;
 
+    @PreAuthorize(value = "hasAuthority('USER') or hasAuthority('ADMIN')")
     @GetMapping
     public HttpEntity<?> getRecipe(){
         ApiResponse apiResponse=recipeService.get();
         return ResponseEntity.status(apiResponse.isSuccess()?200:400).body(apiResponse.getObject());
     }
 
+
+
+    @PreAuthorize(value = "hasAuthority('USER') or hasAuthority('ADMIN')")
     @GetMapping("/{id}")
     public HttpEntity<?> getRecipeById(@PathVariable Long id){
         ApiResponse apiResponse=recipeService.getById(id);
         return ResponseEntity.status(apiResponse.isSuccess()?200:400).body(apiResponse.getObject());
     }
 
+    @PreAuthorize(value = "hasAuthority('ADMIN')")
     @DeleteMapping("/{id}")
     public HttpEntity<?> deleteRecipe(@PathVariable Long id){
         ApiResponse apiResponse=recipeService.delete(id);
         return ResponseEntity.status(apiResponse.isSuccess()?200:400).body(apiResponse.getObject());
     }
 
+    @PreAuthorize(value = "hasAuthority('ADMIN')")
     @PostMapping
     public HttpEntity<?> addRecipe(@RequestPart("name") String name,
                                        @RequestPart("photo") MultipartFile file ){
@@ -47,6 +54,7 @@ public class RecipeController {
         return ResponseEntity.status(apiResponse.isSuccess()?200:400).body(apiResponse.getObject());
     }
 
+    @PreAuthorize(value = "hasAuthority('ADMIN')")
     @PostMapping("/add-ingredient")
     public HttpEntity<?> addIngredientToRecipe(@RequestParam("recipe") Long recipeId,
                                                @RequestParam("ingredient") List<Long> ingredientIdList){

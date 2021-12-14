@@ -11,4 +11,6 @@ public interface IngredientService {
     ApiResponse addIngredient(String name, MultipartFile file);
 
     ApiResponse getById(Long id);
+
+    ApiResponse getName(String name);
 }

@@ -13,6 +13,7 @@ import com.policook.policook.service.RecipeService;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,6 +21,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class RecipeServiceImpl implements RecipeService {
@@ -41,32 +43,31 @@ public class RecipeServiceImpl implements RecipeService {
     @Override
     public ApiResponse get() {
         if (recipeRepository.findAll().size() != 0) {
-            List<Recipe> recipeList = recipeRepository.findAll();
-
-            List<List<Object>> mainList=new ArrayList<>();
+            List<Recipe> recipeList = recipeRepository.findAll().stream()
+                    .sorted(Comparator.comparing(Recipe::getName)).collect(Collectors.toList());
+            List<List<Object>> mainList = new ArrayList<>();
 
             for (Recipe recipe : recipeList) {
-                Map<String,Recipe> recipeMap=new HashMap<>();
-                Map<String,List<Ingredient>> ingredientMap=new HashMap<>();
-                List<Object> attachmentList=new ArrayList<>();
-                List<Ingredient> ingredientList=new ArrayList<>();
-                recipeMap.put("Recipe:",recipe);
+                Map<String, Recipe> recipeMap = new HashMap<>();
+                Map<String, List<Ingredient>> ingredientMap = new HashMap<>();
+                List<Object> attachmentList = new ArrayList<>();
+                List<Ingredient> ingredientList = new ArrayList<>();
+                recipeMap.put("Recipe:", recipe);
                 List<RecipeIngredient> recipeIngredients = recipeIngredientRepository.findByRecipeId(recipe.getId());
                 for (RecipeIngredient recipeIngredient : recipeIngredients) {
                     ingredientList.add(recipeIngredient.getIngredient());
                 }
-                ingredientMap.put("Ingredient:",ingredientList);
+                ingredientMap.put("Ingredient:", ingredientList);
                 attachmentList.add(recipeMap);
                 attachmentList.add(ingredientMap);
                 mainList.add(attachmentList);
 
             }
 
-
             return new ApiResponse("Recipe List:", true, mainList);
-        }
-        else return new ApiResponse("List is empty", false, "List is Empty");
+        } else return new ApiResponse("List is empty", false, "List is Empty");
     }
+
 
     @Override
     public ApiResponse delete(Long id) {
@@ -99,8 +100,7 @@ public class RecipeServiceImpl implements RecipeService {
     @Override
     public ApiResponse getById(Long id) {
         Optional<Recipe> recipeOptional = recipeRepository.findById(id);
-        if (recipeOptional.isEmpty())
-            return new ApiResponse("Not found Recipe", false, "Not found Recipe");
+        if (recipeOptional.isEmpty()) return new ApiResponse("Not found Recipe", false, "Not found Recipe");
         return new ApiResponse("Recipe id:" + id, true, recipeRepository.getById(id));
     }
 
@@ -113,17 +113,33 @@ public class RecipeServiceImpl implements RecipeService {
         List<RecipeIngredient> recipeIngredientList = new ArrayList<>();
 
         for (Ingredient ingredient : ingredientList) {
-            recipeIngredientList.add(
-                    new RecipeIngredient(
-                            optionalRecipe.get(),
-                            ingredient
-                    )
-            );
+            recipeIngredientList.add(new RecipeIngredient(optionalRecipe.get(), ingredient));
         }
 
         recipeIngredientRepository.saveAll(recipeIngredientList);
 
         return new ApiResponse("Saccesfully attached", true, "Succesfully attached");
+    }
+
+    @Override
+    public ApiResponse getName(String name) {
+        if (recipeRepository.findAll().size() != 0) {
+            List<Recipe> recipeList = recipeRepository.findAll()
+                    .stream().sorted(Comparator.comparing(Recipe::getName)).collect(Collectors.toList());
+
+            List<Recipe> recipeList1=new ArrayList<>();
+
+            for (Recipe recipe : recipeList) {
+                if (recipe.getName().contains(name)||recipe.getName().equalsIgnoreCase(name)){
+                    recipeList1.add(recipe);
+                }
+            }
+            return new ApiResponse("Recipe List:", true,recipeList1.stream()
+                    .sorted(Comparator.comparing(Recipe::getName)).collect(Collectors.toList()));
+        }
+
+
+        else return new ApiResponse("List is empty", false, "List is Empty");
     }
 
     @SneakyThrows
@@ -132,8 +148,7 @@ public class RecipeServiceImpl implements RecipeService {
         String[] split = contentType.split("/");
 
         if (!(split[1].equals("jpeg") || split[1].equals("png")))
-            return new ApiResponse("File type is uncorrectly. Upload jpg or png file", false,
-                    "File type is uncorrectly. Upload jpg or png file");
+            return new ApiResponse("File type is uncorrectly. Upload jpg or png file", false, "File type is uncorrectly. Upload jpg or png file");
 
         File file = new File(uploadPath);
         if (!file.exists()) {

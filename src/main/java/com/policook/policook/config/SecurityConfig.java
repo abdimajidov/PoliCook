@@ -1,6 +1,6 @@
 package com.policook.policook.config;
 
-import com.policook.policook.serviceImpl.UserService;
+import com.policook.policook.serviceImpl.UserServiceImpl;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -20,7 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-    UserService userService;
+    UserServiceImpl userService;
     PasswordEncoder passwordEncoder;
 
     @Override
@@ -34,11 +34,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 httpBasic()
                 .and().csrf().disable()
                 .authorizeRequests()
-//                .antMatchers("/product/admin/**").hasAuthority("ADMIN")
-//                .antMatchers("/product/admin/delete/**").hasAuthority("MANAGER")
                 .antMatchers("/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
-                .formLogin().disable();
+                .formLogin().loginPage("/api/main").permitAll();
+
     }
 }

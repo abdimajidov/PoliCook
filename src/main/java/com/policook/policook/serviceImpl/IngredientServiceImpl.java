@@ -15,8 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class IngredientServiceImpl implements IngredientService {
@@ -31,7 +31,8 @@ public class IngredientServiceImpl implements IngredientService {
     @Override
     public ApiResponse get() {
         if (ingredientRepository.findAll().size() != 0)
-            return new ApiResponse("Ingredient List:", true, ingredientRepository.findAll());
+            return new ApiResponse("Ingredient List:", true, ingredientRepository.findAll()
+                    .stream().sorted(Comparator.comparing(Ingredient::getName)).collect(Collectors.toList()));
         else return new ApiResponse("List is empty", false, "List is Empty");
     }
 
@@ -69,6 +70,27 @@ public class IngredientServiceImpl implements IngredientService {
         if (optionalIngredient.isEmpty())
             return new ApiResponse("Not found Ingredient", false, "Not found Ingredient");
         return new ApiResponse("Ingredient id:" + id, true, ingredientRepository.getById(id));
+    }
+
+    @Override
+    public ApiResponse getName(String name) {
+        if (ingredientRepository.findAll().size() != 0) {
+            List<Ingredient> ingredientList = ingredientRepository.findAll()
+                    .stream().sorted(Comparator.comparing(Ingredient::getName)).collect(Collectors.toList());
+
+            List<Ingredient> ingredientList1=new ArrayList<>();
+
+            for (Ingredient ingredient : ingredientList) {
+                if (ingredient.getName().contains(name)||ingredient.getName().equalsIgnoreCase(name)){
+                    ingredientList1.add(ingredient);
+                }
+            }
+            return new ApiResponse("Ingredient List:", true,ingredientList1.stream()
+                    .sorted(Comparator.comparing(Ingredient::getName)).collect(Collectors.toList()));
+        }
+
+
+        else return new ApiResponse("List is empty", false, "List is Empty");
     }
 
     @SneakyThrows
